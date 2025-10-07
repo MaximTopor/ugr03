@@ -12,16 +12,53 @@ import java.nio.ByteBuffer;
 import org.lwjgl.BufferUtils;
 
 public class ugr03 {
-    private int sirka = 800;
-    private int vyska = 600;
-    private int rozmer = Math.min(sirka, vyska)/2; //max. polomer kruhu
-    private int sx = sirka/2, sy = vyska/2; //stred obrazovky
-    private ByteBuffer buffer = BufferUtils.createByteBuffer(sirka*vyska*4); //4 bpp (bytes per pixel), RGBA
-    private int rgba_WHITE = 0xFFFFFFFF; //-1
-    private int rgba_BLACK = 0x00000000;
+    private final int sirka = 800;
+    private final int vyska = 600;
+    private final int rozmer = Math.min(sirka, vyska)/2; //max. polomer kruhu
+    private final int sx = sirka/2;
+    private final int sy = vyska/2; //stred obrazovky
+    private final ByteBuffer buffer = BufferUtils.createByteBuffer(sirka*vyska*4); //4 bpp (bytes per pixel), RGBA
+    private final int rgba_WHITE = 0xFFFFFFFF; //-1
+    private final int rgba_BLACK = 0x00000000;
+    private  int limit = 43000;
+    private final java.nio.IntBuffer ib = buffer.asIntBuffer();
+
 
     private void vypln(int x, int y) {
-        bod(x,y);
+        if( limit <= 0) return;
+        limit--;
+        if(zistiFarbu(x,y) == rgba_BLACK) {
+            bod(x, y);
+            vypln(x+1, y);
+            vypln(x, y+1);
+            vypln(x-1, y);
+            vypln(x, y-1);
+        }
+    }
+
+    private void vyplnR(int x, int y) {
+        if( limit <= 0) return;
+        limit--;
+        int xi = x-1;
+        while (xi >=0 && zistiFarbu(xi,y)== rgba_BLACK) {
+            xi--;
+        }
+        xi++;
+        int xr = x+1;
+        while (xr >=0 &&zistiFarbu(xr,y)== rgba_BLACK) {xr++;}
+        xr--;
+
+        riadok(y,xi,xr);
+        for (x=xi; x <= xr; x++) {
+            if (zistiFarbu(x,y-1) == rgba_BLACK)
+            {
+                vyplnR(x, y-1);
+            }
+            if (zistiFarbu(x,y+1) == rgba_BLACK)
+            {
+                vyplnR(x, y+1);
+            }
+        }
     }
 
     void vykresliGL() {
@@ -37,20 +74,31 @@ public class ugr03 {
         //vnutorna lomena ciara
         glBegin(GL_LINE_LOOP);
         glColor3f(0, 0, 1);
+
         lomenaCiaraKruh(0.2, 0.18);
         glEnd();
 
         takeScreenShot();
 
         glBegin(GL_POINTS);
-        glColor3f(1, 0, 0);
+        glColor3f(0.4f, 0.8f, 1.0f);
         vypln(sx, sy);
+
+
+        glColor3f(0.2f, 1.0f, 0.7f);
+        vyplnR((int)(sx + rozmer * 0.5), sy);
+
+
+        glColor3f(0.2f, 0.2f, 0.5f);
+        vyplnR(10, 10);
         glEnd();
     }
 
     long window;
     GLFWErrorCallback errorCallback;
     GLFWKeyCallback   keyCallback;
+
+
 
     void spusti() {
         try {
@@ -108,15 +156,18 @@ public class ugr03 {
     }
 
     private void bod(int x, int y) {
+        if (x < 0 || y < 0 || x >= sirka || y >= vyska) return;
         glVertex2i(x, y);
-        y = vyska-1-y;
-        buffer.asIntBuffer().put(y*sirka+x, rgba_WHITE);
+        int yy = vyska - 1 - y;
+        ib.put(yy * sirka + x, rgba_WHITE);
     }
 
     private int zistiFarbu(int x, int y) {
-        y = vyska-1-y;
-        return buffer.asIntBuffer().get(sirka*y+x);
+        if (x < 0 || y < 0 || x >= sirka || y >= vyska) return rgba_WHITE; // усе поза екраном вважаємо "білим"
+        int yy = vyska - 1 - y;
+        return ib.get(yy * sirka + x);
     }
+
 
     private void lomenaCiaraKruh(double stred, double odchylka) {
         double r, znam = -1;
