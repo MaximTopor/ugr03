@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
 
-public class ugr03 {
+public class zadanie1 {
     private final int sirka = 800;
     private final int vyska = 600;
     private final int rozmer = Math.min(sirka, vyska)/2; //max. polomer kruhu
@@ -90,7 +90,7 @@ public class ugr03 {
 
 
         glColor3f(0.2f, 0.2f, 0.5f);
-        vyplnR(10, 10);
+        vyplnR((int)(sx + rozmer * 0.95), sy);
         glEnd();
     }
 
@@ -200,6 +200,6 @@ public class ugr03 {
     }
 
     public static void main(String[] args) {
-        new ugr03().spusti();
+        new zadanie1().spusti();
     }
 }
