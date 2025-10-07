@@ -163,7 +163,7 @@ public class zadanie1 {
     }
 
     private int zistiFarbu(int x, int y) {
-        if (x < 0 || y < 0 || x >= sirka || y >= vyska) return rgba_WHITE; // усе поза екраном вважаємо "білим"
+        if (x < 0 || y < 0 || x >= sirka || y >= vyska) return rgba_WHITE;
         int yy = vyska - 1 - y;
         return ib.get(yy * sirka + x);
     }
